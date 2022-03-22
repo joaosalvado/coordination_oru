@@ -19,7 +19,8 @@
  */
 
 apply plugin: 'java'
-apply plugin: 'eclipse'
+//apply plugin: 'eclipse'
+apply plugin: 'idea'
 
 // The Maven publish plugin is only required if your package is used as a library.
 apply plugin: 'maven'
@@ -28,7 +29,7 @@ apply plugin: 'maven'
 // your package is used as a binary.
 apply plugin: 'application'
 // The main class that will be executed when you do 'gradle run'
-mainClassName = 'se.oru.coordination.coordination_oru.demo.DemoLauncher'
+mainClassName = 'se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorThreeRobots' //demo.DemoLauncher'
 
 repositories {
   mavenLocal()
