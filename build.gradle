@@ -29,7 +29,7 @@ apply plugin: 'maven'
 // your package is used as a binary.
 apply plugin: 'application'
 // The main class that will be executed when you do 'gradle run'
-mainClassName = 'se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorThreeRobots' //demo.DemoLauncher'
+mainClassName = 'se.oru.coordination.coordination_oru.multirobotoptimization.tests.dimopt.test2' //demo.DemoLauncher'
 
 repositories {
   mavenLocal()
