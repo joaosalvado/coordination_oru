@@ -1,26 +1,23 @@
-package se.oru.coordination.coordination_oru.multirobotoptimization.tests.dimopt;
+package se.oru.coordination.coordination_oru.multirobotoptimization.tests.dimpc;
 
-import com.google.common.collect.ObjectArrays;
-import com.vividsolutions.jts.geom.Coordinate;
-import org.metacsp.multi.spatioTemporal.paths.Pose;
-import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
-import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
-import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
-import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
-import se.oru.coordination.coordination_oru.util.Missions;
+        import com.vividsolutions.jts.geom.Coordinate;
+        import org.metacsp.multi.spatioTemporal.paths.Pose;
+        import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
+        import se.oru.coordination.coordination_oru.motionplanning.ompl.ReedsSheppCarPlanner;
+        import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+        import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
+        import se.oru.coordination.coordination_oru.util.Missions;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Arrays;
+        import java.util.Comparator;
 
 
-import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
-import se.oru.coordination.coordination_oru.CriticalSection;
-import se.oru.coordination.coordination_oru.Mission;
-import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
-import se.oru.coordination.coordination_oru.RobotReport;
+        import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
+        import se.oru.coordination.coordination_oru.CriticalSection;
+        import se.oru.coordination.coordination_oru.Mission;
+        import se.oru.coordination.coordination_oru.RobotAtCriticalSection;
+        import se.oru.coordination.coordination_oru.RobotReport;
 
-public class test1 {
+public class test2 {
 
     public static void main(String[] args) {
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +32,7 @@ public class test1 {
         // -- the getCurrentTimeInMillis() method, which is used by the coordinator to keep time
         //You still need to add one or more comparators to determine robot orderings thru critical sections (comparators are evaluated in the order in which they are added)
         final TrajectoryEnvelopeCoordinatorSimulation tec = new TrajectoryEnvelopeCoordinatorSimulation(MAX_VEL,MAX_ACCEL);
-        tec.addComparator(new Comparator<RobotAtCriticalSection> () {
+        tec.addComparator(new Comparator<RobotAtCriticalSection>() {
             @Override
             public int compare(RobotAtCriticalSection o1, RobotAtCriticalSection o2) {
                 CriticalSection cs = o1.getCriticalSection();
@@ -138,16 +135,20 @@ public class test1 {
                 public void run() {
                     Mission m = Missions.getMission(robotID, 0);
                     synchronized(tec) { tec.addMissions(m); }
+
                     // Simulate DiMOpt finding other path
-                        try { Thread.sleep(5000); }
+                    try { Thread.sleep(5000); }
+                    catch (InterruptedException e) { e.printStackTrace(); }
+                    // New path computed
+
+                    PoseSteering [] next_path = (robotID == 1) ? mg1 : mg2;
+                    while(true) {
+                        if(tec.addMissions(new Mission(robotID, next_path))){
+                            break;
+                        };
+                        try { Thread.sleep(1000); }
                         catch (InterruptedException e) { e.printStackTrace(); }
-                        // New path computed
-                        int lastMissionEndIndex = m.getPath().length-2; //tec.getRobotReport(robotID).getPathIndex();
-                        int otherRobotId = (robotID == 1) ? 2 : 1;
-                        PoseSteering [] next_path = (robotID == 1) ? mg1 : mg2;
-                        PoseSteering [] full_path
-                                = ObjectArrays.concat(m.getPath(), next_path, PoseSteering.class);
-                        tec.replacePath(robotID, full_path,lastMissionEndIndex,(new HashSet<>(Arrays.asList(otherRobotId))));//
+                    }
                 }
             };
             t.start();
