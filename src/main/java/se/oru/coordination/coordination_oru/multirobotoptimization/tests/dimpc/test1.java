@@ -12,6 +12,7 @@ import se.oru.coordination.coordination_oru.util.Missions;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;
@@ -87,12 +88,12 @@ public class test1 {
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Start and Goal Poses
-        Pose s1 = new Pose(1.0,1.0,0.5*Math.PI);
-        Pose s2 = new Pose(10.0,1.0,0.5*Math.PI);
-        Pose m1 = new Pose(7.0,7.0,0.25*Math.PI);
-        Pose m2 = new Pose(3.0,7.0,0.25*Math.PI);
+        Pose s1 = new Pose( 1.0, 1.0,0.5 *Math.PI);
+        Pose s2 = new Pose(10.0, 1.0,0.5 *Math.PI);
+        Pose m1 = new Pose( 7.0, 7.0,0.25*Math.PI);
+        Pose m2 = new Pose( 3.0, 7.0,0.25*Math.PI);
         Pose g1 = new Pose(10.0,10.0,0.0);
-        Pose g2 = new Pose(1.0,10.0,0.0);
+        Pose g2 = new Pose( 1.0,10.0,0.0);
 
         // Compute paths
         // s1 -> m1
@@ -142,12 +143,11 @@ public class test1 {
                         try { Thread.sleep(5000); }
                         catch (InterruptedException e) { e.printStackTrace(); }
                         // New path computed
-                        int lastMissionEndIndex = m.getPath().length-2; //tec.getRobotReport(robotID).getPathIndex();
+                        int lastMissionEndIndex = m.getPath().length-1; //tec.getRobotReport(robotID).getPathIndex();
                         int otherRobotId = (robotID == 1) ? 2 : 1;
                         PoseSteering [] next_path = (robotID == 1) ? mg1 : mg2;
-                        PoseSteering [] full_path
-                                = ObjectArrays.concat(m.getPath(), next_path, PoseSteering.class);
-                        tec.replacePath(robotID, full_path,lastMissionEndIndex,(new HashSet<>(Arrays.asList(otherRobotId))));//
+                        PoseSteering [] full_path = ObjectArrays.concat(m.getPath(), next_path, PoseSteering.class);
+                    tec.replacePath(robotID, next_path, lastMissionEndIndex-1, true, (new HashSet<>(Arrays.asList(robotID))));//
                 }
             };
             t.start();
