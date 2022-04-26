@@ -1,4 +1,4 @@
-package se.oru.coordination.coordination_oru.multirobotoptimization.tests.dimpc;
+package se.oru.coordination.coordination_oru.multirobotplanning.tests.dimpc;
 
 import com.google.common.collect.ObjectArrays;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -12,7 +12,6 @@ import se.oru.coordination.coordination_oru.util.Missions;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 
 import se.oru.coordination.coordination_oru.ConstantAccelerationForwardModel;

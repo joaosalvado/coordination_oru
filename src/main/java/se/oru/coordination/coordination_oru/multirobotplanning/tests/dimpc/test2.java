@@ -1,4 +1,4 @@
-package se.oru.coordination.coordination_oru.multirobotoptimization.tests.dimpc;
+package se.oru.coordination.coordination_oru.multirobotplanning.tests.dimpc;
 
         import com.vividsolutions.jts.geom.Coordinate;
         import org.metacsp.multi.spatioTemporal.paths.Pose;
