@@ -5,12 +5,11 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import se.oru.coordination.coordination_oru.multirobotplanning.AbstractMultirobotPlanning;
-import com.vividsolutions.jts.geom.Geometry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
-
     private ArrayList<Double> L; // Circle Robots Diameter;
 
     public RecedingHorizonDiMOpt(int R){
