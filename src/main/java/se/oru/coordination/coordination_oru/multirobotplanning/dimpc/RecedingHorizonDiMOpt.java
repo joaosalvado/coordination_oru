@@ -12,8 +12,8 @@ import java.util.Arrays;
 public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     private ArrayList<Double> L; // Circle Robots Diameter;
 
-    public RecedingHorizonDiMOpt(int R){
-        super(R);
+    public RecedingHorizonDiMOpt(int R, double max_vel, double max_acc, String map){
+        super(R, max_vel, max_acc, map);
         L = new ArrayList<>(R);
     }
     @Override
@@ -30,14 +30,14 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
             Coordinate[] coords = this.footprints.get(r);
             GeometryFactory gf = new GeometryFactory();
             Coordinate[] newCoords = new Coordinate[coords.length+1];
-            for (int i = 0; i < coords.length; i++) {
-                newCoords[i] = coords[i];
-            }
+            for (int i = 0; i < coords.length; i++) newCoords[i] = coords[i];
             newCoords[newCoords.length-1] = coords[0];
             Polygon pol = gf.createPolygon(coords);
             MinimumBoundingCircle  circleFootprint= new MinimumBoundingCircle(pol);
             L.set(r, circleFootprint.getRadius());
         }
     }
+
+
 
 }
