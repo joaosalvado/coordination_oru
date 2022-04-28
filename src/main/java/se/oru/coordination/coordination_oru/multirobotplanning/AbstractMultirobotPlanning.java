@@ -1,5 +1,6 @@
 package se.oru.coordination.coordination_oru.multirobotplanning;
 
+import com.google.common.collect.ObjectArrays;
 import com.vividsolutions.jts.geom.Coordinate;
 import org.metacsp.multi.spatioTemporal.paths.Pose;
 import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
@@ -8,14 +9,23 @@ import org.metacsp.utility.logging.MetaCSPLogging;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
 import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
+import se.oru.coordination.coordination_oru.util.Missions;
 
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.logging.Logger;
 import java.util.ArrayList;
 public  abstract class AbstractMultirobotPlanning {
+    protected class MultirobotProblem{
+        public MultirobotProblem(Pose[] start_, Pose[] goal_){
+            this.start = start_; this.goal = goal_;
+        }
+        public Pose[] start = null; // Robot's start configuration
+        public Pose[] goal = null;  // Robot's goal configuration
+    }
     protected int R; // Number of Robots
-    protected Pose[] start = null; // Robot's start configuration
-    protected Pose[] goal = null;  // Robot's goal configuration
+    public MultirobotProblem problem;
     protected ArrayList<Coordinate[]> footprints = null; // Robot's footprint corners
     protected Logger metaCSPLogger = MetaCSPLogging.getLogger(this.getClass());
     protected final TrajectoryEnvelopeCoordinatorSimulation tec;
@@ -28,21 +38,11 @@ public  abstract class AbstractMultirobotPlanning {
         tec = new TrajectoryEnvelopeCoordinatorSimulation(max_vel, max_acc);
     }
 
-    public void setMultirobotStart(Pose[] start_){
-        if(start_.length != R) metaCSPLogger.warning("The amount of poses should be: " + R);
-        start = start_;
-    }
-    public void setMultirobotGoal(Pose[] goal_){
-        if(goal_.length != R) metaCSPLogger.warning("The amount of poses should be: " + R);
-        goal = goal_;
-    }
-
-    public void setMultirobotProblem(Pose[] start_, Pose[] goal_){
+    public void addMultirobotProblem(Pose[] start_, Pose[] goal_){
         if(goal_.length != R || start_.length != R){
             metaCSPLogger.warning("The amount of poses should be: " + R);
         }
-        goal = goal_;
-        start = start_;
+        this.problem = new MultirobotProblem(start_, goal_);
     }
 
     /**
@@ -54,17 +54,62 @@ public  abstract class AbstractMultirobotPlanning {
         for(int r = 0; r < R; ++r) footprints.add( footprint_standard);
     }
 
-    protected boolean isProblemValid(){
-        if(start.length != R) return false;
-        if( goal.length != R) return false;
+    /**
+     * This function has to generate a .json file in the form ... , that
+     * is going to be read by the coordinator
+     * @param problem
+     * @return
+     */
+    public abstract boolean plan(MultirobotProblem problem);
+
+    public boolean solve(){
+        // Start the multirobot solver, will be outputting multiple files with trajectories
+
+        Thread multirobotSolver = new Thread( ( ) -> {this.plan(this.problem);});
+        multirobotSolver.start();
+
+/*        for (int i = 1; i <= R; i++) {
+            final int robotID = i;
+            Thread t = new Thread() {
+                @Override
+                public void run() {
+                    boolean initialize = true;
+                    while(true){
+                        Mission mission = null;
+                        if(existsNewMission(robotID)){
+                            mission = getNewMission(robotID);
+                        }
+                        if(initialize){ // Add first mission
+                            tec.addMissions(mission);
+                            initialize = false;
+                        } else{ // Concat Mission (receding horizon)
+                            tec.addMissions(mission); // replacePath
+                        }
+
+                        // Sleep for 1s
+                        try { Thread.sleep(1000); }
+                        catch (InterruptedException e) { e.printStackTrace(); }
+                    }
+                }
+            };
+            t.start();
+        }*/
+
+
         return true;
     }
 
-    public abstract boolean plan();
+    boolean existsNewMission(int robotID){
+        // Check if file exists
 
-    public boolean handleSolution(){
+        return false;
+    }
 
-        return true;
+    Mission getNewMission(int robotID){
+        PoseSteering[] path = new PoseSteering[0]; // populate this
+
+
+        return  new Mission(robotID,path);
     }
 
     /**
@@ -76,7 +121,7 @@ public  abstract class AbstractMultirobotPlanning {
     }
 
     public void setupTrajectoryEnvelopeCoordinator(){
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
+/*        ////////////////////////////////////////////////////////////////////////////////////////////////////
         // Setup
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         tec.addComparator(new Comparator<RobotAtCriticalSection>() {
@@ -108,8 +153,8 @@ public  abstract class AbstractMultirobotPlanning {
 
         //Setup a simple GUI (null means empty map, otherwise provide yaml file)
         JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
-        if(map_file != null) viz.setMap(map_file);
-        tec.setVisualization(viz);
+        if(map_file != null) viz.setMap("maps/" +map_file);
+        tec.setVisualization(viz);*/
 
     }
 }

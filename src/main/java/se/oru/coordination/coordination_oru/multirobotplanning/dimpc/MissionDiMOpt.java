@@ -11,7 +11,6 @@ import java.util.ArrayList;
 
 
 public class MissionDiMOpt {
-    protected Logger metaCSPLogger = MetaCSPLogging.getLogger(this.getClass());
     private static final Logger LOGGER = Logger.getLogger( MissionDiMOpt.class.getName() );
     // Helper Classes
     /**
@@ -34,12 +33,12 @@ public class MissionDiMOpt {
     /**
      *  Polytope is a convex region defined by the intersection of halfspaces
       */
-    public static class Polytope {
+/*    public static class Polytope {
         private ArrayList<Halfspace> halfspaces;
-        /**
+        *//**
          * Halspace is composed of a normal vector (a_x, a_y) of a line crossing y-axis at b
          * a_x * x + a_y * y <= b
-         */
+         *//*
         public static class Halfspace {
             private double a_x, a_y, b;
             public Halfspace(double ... vars){
@@ -55,7 +54,7 @@ public class MissionDiMOpt {
             for(Halfspace hp : hps) this.halfspaces.add(hp);
         }
         public void  addHalfSpace(Halfspace hp){ this.halfspaces.add(hp);}
-    }
+    }*/
 
     // SE2 creators
     public SE2 se2(double x, double y, double o) {
@@ -65,6 +64,7 @@ public class MissionDiMOpt {
         return new SE2(xyo);
     }
 
+/*
     // Polytope creators
     public Polytope polytope(){
         return new Polytope();
@@ -72,45 +72,51 @@ public class MissionDiMOpt {
     public Polytope polytope(Polytope.Halfspace ... hps){
         return new Polytope(hps);
     }
+*/
 
 
     // Mission
-    int R; // Number of Robots
-    int N; // Discretization variables
-    ArrayList<SE2> start; // Starting Configuration
-    ArrayList<SE2> goal; // Goal Configuration
-    ArrayList<Polytope> freeSpace; // FreeSpace convex region
+    private int R; // Number of Robots
+    private ArrayList<SE2> start; // Starting Configuration
+    private ArrayList<SE2> goal; // Goal Configuration
+    private String mapFile;
+    //ArrayList<Polytope> freeSpace; // FreeSpace convex region
+
 
     public MissionDiMOpt(int R_){
         this.start = new ArrayList<>(R_);
         this.goal =  new ArrayList<>(R_);
-        this.freeSpace = new ArrayList<>(R_);
+        //this.freeSpace = new ArrayList<>(R_);
         this.R = R_;
     }
     public MissionDiMOpt setMultirobotStart(SE2 ... states){
-        if(states.length != R) metaCSPLogger.warning("Provide " + R + " states");
+        if(states.length != R) LOGGER.warning("Provide " + R + " states");
         for(SE2 state : states) start.add(state);
         return this;
     }
     public MissionDiMOpt setMultirobotGoal(SE2 ... states){
-        if(states.length != R) metaCSPLogger.warning("Provide " + R + " states");
+        if(states.length != R) LOGGER.warning("Provide " + R + " states");
         for(SE2 state : states) goal.add(state);
         return this;
     }
-    public MissionDiMOpt setFreeSpace( Polytope ... polytopes){
+    public MissionDiMOpt setMap(String filename){
+        this.mapFile = filename;
+        return this;
+    }
+/*    public MissionDiMOpt setFreeSpace( Polytope ... polytopes){
         if(polytopes.length != R) metaCSPLogger.warning("Provide " + R + " polygons");
         for(Polytope pol : polytopes) freeSpace.add(pol);
         return this;
-    }
+    }*/
 
     /**
      * All robots navigate in the same polytope
      * @param polytope
      * @return
      */
-    public MissionDiMOpt setSamePolytopeFreeSpace( Polytope polytope){
+/*    public MissionDiMOpt setSamePolytopeFreeSpace( Polytope polytope){
         for(int r = 0; r < R; ++r) freeSpace.add(polytope);
         return this;
-    }
+    }*/
 }
 
