@@ -19,25 +19,27 @@ import java.util.ArrayList;
 public class dimopt {
 
     public static void main(String[] args) {
-        int R = 2;
+        int R = 3;
         String file_map = "map1.yaml";
         // Robot Footprint Rectangle
-        Coordinate corner1 = new Coordinate(-0.2,0.1);
-        Coordinate corner2 = new Coordinate(0.2,0.1);
-        Coordinate corner3 = new Coordinate(0.2,-0.1);
-        Coordinate corner4 = new Coordinate(-0.2,-0.1);
+        Coordinate corner1 = new Coordinate(-0.6,0.1);
+        Coordinate corner2 = new Coordinate(0.6,0.1);
+        Coordinate corner3 = new Coordinate(0.6,-0.1);
+        Coordinate corner4 = new Coordinate(-0.6,-0.1);
         Coordinate[] footprint = {
                 corner1, corner2, corner3, corner4
         };
 
         // Start and Goal
-        Pose s1 = new Pose( 1.0, 1.0,0.5 *Math.PI);
-        Pose s2 = new Pose(10.0, 1.0,0.5 *Math.PI);
-        Pose g1 = new Pose(10.0,10.0,0.0);
-        Pose g2 = new Pose( 1.0,10.0,0.0);
+        Pose s1 = new Pose( 1.0, 1.0,Math.PI);
+        Pose s2 = new Pose(8.0, 1.0,0.5 *Math.PI);
+        Pose s3 = new Pose(6.0, 1.0,-0.5 *Math.PI);
+        Pose g1 = new Pose(3.0,7.0,0.0);
+        Pose g2 = new Pose( 1.0,8.0,-0.5*Math.PI);
+        Pose g3 = new Pose( 4.0,8.0,0.0);
 
-        Pose [] mrStart = { s1, s2 };
-        Pose [] mrGoal = { g1, g2 };
+        Pose [] mrStart = { s1, s2, s3 };
+        Pose [] mrGoal = { g1, g2, g3 };
 
 /*        ArrayList<MissionDiMOpt.SE2> start_dimopt = new ArrayList<>();
         ArrayList<MissionDiMOpt.SE2> goal_dimopt = new ArrayList<>();

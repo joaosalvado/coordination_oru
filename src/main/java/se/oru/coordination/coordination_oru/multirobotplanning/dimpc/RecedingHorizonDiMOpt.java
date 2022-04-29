@@ -15,13 +15,14 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 import com.google.gson.Gson;
 
 public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     private ArrayList<Double> L; // Circle Robots Diameter;
-
+    int N = 10;
     public RecedingHorizonDiMOpt(int R, double max_vel, double max_acc, String map){
         super(R, max_vel, max_acc, map);
         L = new ArrayList<>(R);
@@ -30,9 +31,11 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     public boolean plan(MultirobotProblem problem) {
        // Populates L
        computeRobotRadius();
+       // Writes a .json file with problem
        writeProblemFile(problem);
+       // Start dimopt executable that reads .json file and solves the problem
        startDiMOpt();
-
+        System.out.println("E!");
        return true;
     }
 
@@ -54,29 +57,31 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     void writeProblemFile(MultirobotProblem problem){
         // Create DiMopt Mission
         MissionDiMOpt missionDiMOpt = new MissionDiMOpt(R);
-        ArrayList<MissionDiMOpt.SE2> start_dimopt = new ArrayList<>();
-        ArrayList<MissionDiMOpt.SE2> goal_dimopt = new ArrayList<>();
+        ArrayList<ArrayList<Double>> start_dimopt = new ArrayList<>();
+        ArrayList<ArrayList<Double>> goal_dimopt = new ArrayList<>();
         for(int r = 0; r < R; ++r){
             start_dimopt.add(
-                    new MissionDiMOpt.SE2(
+                    new ArrayList<>(Arrays.asList(
                             problem.start[r].getX(),
                             problem.start[r].getY(),
-                            problem.start[r].getYaw()) );
+                            problem.start[r].getYaw()) ) );
             goal_dimopt.add(
-                    new MissionDiMOpt.SE2(
+                    new ArrayList<>(Arrays.asList(
                             problem.goal[r].getX(),
                             problem.goal[r].getY(),
-                            problem.start[r].getYaw()) );
+                            problem.start[r].getYaw()) ) );
         }
         missionDiMOpt
-                .setMultirobotStart(start_dimopt.toArray(new MissionDiMOpt.SE2[0]))
-                .setMultirobotGoal(goal_dimopt.toArray(new MissionDiMOpt.SE2[0]))
+                .setMultirobotStart(start_dimopt)
+                .setMultirobotGoal(goal_dimopt)
+                .setParams(N,max_vel/2, max_vel)
+                .setMultirobotRadius(L)
                 .setMap(this.map_file);
         // write gson file
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(missionDiMOpt);
 
-        try (PrintWriter out = new PrintWriter("RH-DiMOpt/dimopt_mission.txt")) {
+        try (PrintWriter out = new PrintWriter("RH-DiMOpt/bin/dimopt_mission.txt")) {
             out.println(json);
         } catch (Exception e){ };
 
@@ -84,22 +89,15 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
 
     void startDiMOpt(){
         ProcessBuilder p = new ProcessBuilder();
-        /*p.command("/bin/bash", "-l", "-c", "mpirun -np 6 --use-hwthread-cpus --oversubscribe ./distributed_scp circle_6 0.5pol.png");
-        try{
-            p.start();
-        }
-        catch(Exception e){}
-*/
 
-        runCommand("ls -la");
-        runCommand( "" );
+        String cmd = "mpirun -np " + this.R + " --use-hwthread-cpus --oversubscribe ./RH-DiMOpt/bin/rhdimopt_coordoru";
+        runCommand("/bin/bash", "-l", "-c", cmd);
+
     }
 
-    private void runCommand(String... command) {
+    private void runCommand(String... cmd) {
         ProcessBuilder processBuilder
-                = new ProcessBuilder().command(
-                        "sh", "-c",
-                "mpirun -np 6 --use-hwthread-cpus --oversubscribe ./RH-DiMOpt/distributed_scp circle_6 0.5pol.png");
+                = new ProcessBuilder().command( cmd );
         try {
             Process process = processBuilder.start();
 
