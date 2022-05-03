@@ -29,6 +29,9 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     }
     @Override
     public boolean plan(MultirobotProblem problem) {
+        for(int r = 0; r < R; ++r){
+            tec.placeRobot(r+1,problem.start[r]);
+        }
        // Populates L
        computeRobotRadius();
        // Writes a .json file with problem
@@ -106,7 +109,7 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
             String output = null;
             while ((output = bufferedReader.readLine()) != null) {
-                System.out.println(output);
+                //System.out.println(output); //Uncomment to see Dimopt
             }
 
             //wait for the process to complete

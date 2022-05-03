@@ -44,8 +44,6 @@ public  abstract class AbstractMultirobotPlanning {
         for(int r = 0; r < R; ++r){
             this.paths[r] = new LinkedList<PoseSteering[]>();
         }
-        mission_sequence_id = new int[R];
-        Arrays.fill(mission_sequence_id,0);
         tec = new TrajectoryEnvelopeCoordinatorSimulation(max_vel, max_acc);
 
     }
@@ -76,31 +74,42 @@ public  abstract class AbstractMultirobotPlanning {
 
     public boolean solve(){
         // Start the multirobot solver, will be outputting multiple files with trajectories
-
         Thread multirobotSolver = new Thread( ( ) -> {this.plan(this.problem);});
         multirobotSolver.start();
 
-        try{missionListener();}
-        catch(Exception e){}
+        // Listener of Trajectories, it fills variable paths
+        Thread listener = new Thread() {
+            @Override
+            public void run() {
+                synchronized (this){
+                    try{missionListener();} catch(Exception e){}
+                }
+            }
+        };
+        listener.start();
 
-/*        for (int i = 1; i <= R; i++) {
+        for (int i = 1; i <= R; i++) {
             final int robotID = i;
             Thread t = new Thread() {
                 @Override
                 public void run() {
                     boolean initialize = true;
                     while(true){
-                        Mission mission = null;
-                        if(existsNewMission(robotID)){
-                            mission = getNewMission(robotID);
+                        synchronized (this) {
+                            if (existsNewMission(robotID)) {
+                                Mission mission = getNewMission(robotID);
+                                if (initialize) { // Add first mission
+                                    synchronized (tec) {
+                                        tec.addMissions(mission);
+                                    }
+                                    initialize = false;
+                                } else { // Concat Mission (receding horizon)
+                                    synchronized (tec) {
+                                        tec.addMissions(mission);
+                                    } // replacePath
+                                }
+                            }
                         }
-                        if(initialize){ // Add first mission
-                            tec.addMissions(mission);
-                            initialize = false;
-                        } else{ // Concat Mission (receding horizon)
-                            tec.addMissions(mission); // replacePath
-                        }
-
                         // Sleep for 1s
                         try { Thread.sleep(1000); }
                         catch (InterruptedException e) { e.printStackTrace(); }
@@ -108,7 +117,7 @@ public  abstract class AbstractMultirobotPlanning {
                 }
             };
             t.start();
-        }*/
+        }
 
 
         return true;
@@ -120,7 +129,12 @@ public  abstract class AbstractMultirobotPlanning {
         ArrayList<Double> roll, pitch, yaw;
     }
     private boolean missionListener() throws Exception {
+        // Gson to read/parse file
         Gson gson = new Gson();
+        // Missions Ids
+        mission_sequence_id = new int[R];
+        Arrays.fill(mission_sequence_id,0);
+        // Finished robots
         ArrayList<Boolean> finished = new ArrayList<>(Arrays.asList(new Boolean[R]));
         Collections.fill(finished, false);
 
@@ -136,6 +150,7 @@ public  abstract class AbstractMultirobotPlanning {
                     SimplePath path = gson.fromJson(
                             new FileReader(filename),
                             SimplePath.class);
+                    file.delete(); // delete file
                     // Convert to PoseSteering[]
                     int N = path.x.size();
                     PoseSteering[] ps = new PoseSteering[N];
@@ -157,18 +172,16 @@ public  abstract class AbstractMultirobotPlanning {
         return true;
     }
 
-/*    boolean existsNewMission(int robotID){
+    boolean existsNewMission(int robotID){
         // Check if file exists
-
-        return false;
+        return !paths[robotID-1].isEmpty();
     }
 
     Mission getNewMission(int robotID){
-        PoseSteering[] path = new PoseSteering[0]; // populate this
-
-
-        return  new Mission(robotID,path);
-    }*/
+        PoseSteering[] path = paths[robotID-1].getLast();
+        paths[robotID-1].removeLast();
+        return  new Mission(robotID+1, path);
+    }
 
     /**
      * Get trajectory envelope coordinator and set it up
@@ -179,7 +192,7 @@ public  abstract class AbstractMultirobotPlanning {
     }
 
     public void setupTrajectoryEnvelopeCoordinator(){
-/*        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
         // Setup
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         tec.addComparator(new Comparator<RobotAtCriticalSection>() {
@@ -212,7 +225,7 @@ public  abstract class AbstractMultirobotPlanning {
         //Setup a simple GUI (null means empty map, otherwise provide yaml file)
         JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
         if(map_file != null) viz.setMap("maps/" +map_file);
-        tec.setVisualization(viz);*/
+        tec.setVisualization(viz);
 
     }
 }

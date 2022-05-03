@@ -20,7 +20,7 @@ public class dimopt {
 
     public static void main(String[] args) {
         int R = 3;
-        String file_map = "map1.yaml";
+        String file_map = "map-empty.yaml";
         // Robot Footprint Rectangle
         Coordinate corner1 = new Coordinate(-0.6,0.1);
         Coordinate corner2 = new Coordinate(0.6,0.1);
