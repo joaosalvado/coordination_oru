@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 
 public  abstract class AbstractMultirobotPlanning {
     protected Deque<PoseSteering[]>[] paths;
-    protected int[] mission_sequence_id;
     protected class MultirobotProblem{
         public MultirobotProblem(Pose[] start_, Pose[] goal_){
             this.start = start_; this.goal = goal_;
@@ -30,7 +29,7 @@ public  abstract class AbstractMultirobotPlanning {
         public Pose[] goal = null;  // Robot's goal configuration
     }
     protected int R; // Number of Robots
-    public MultirobotProblem problem;
+    protected MultirobotProblem problem;
     protected ArrayList<Coordinate[]> footprints = null; // Robot's footprint corners
     protected Logger metaCSPLogger = MetaCSPLogging.getLogger(this.getClass());
     protected final TrajectoryEnvelopeCoordinatorSimulation tec;
@@ -70,11 +69,14 @@ public  abstract class AbstractMultirobotPlanning {
      * @param problem
      * @return
      */
-    public abstract boolean plan(MultirobotProblem problem);
+    protected abstract boolean plan(MultirobotProblem problem);
 
     public boolean solve(){
         // Start the multirobot solver, will be outputting multiple files with trajectories
-        Thread multirobotSolver = new Thread( ( ) -> {this.plan(this.problem);});
+        Thread multirobotSolver = new Thread( ( ) -> {
+            this.plan(this.problem);
+            metaCSPLogger.info("Multi-robot solver finished computing entire multi-robot trajectory");
+        });
         multirobotSolver.start();
 
         // Listener of Trajectories, it fills variable paths
@@ -82,7 +84,8 @@ public  abstract class AbstractMultirobotPlanning {
             @Override
             public void run() {
                 synchronized (this){
-                    try{missionListener();} catch(Exception e){}
+                    try{ missionListener(); }
+                    catch(Exception e){ e.printStackTrace();}
                 }
             }
         };
@@ -94,19 +97,34 @@ public  abstract class AbstractMultirobotPlanning {
                 @Override
                 public void run() {
                     boolean initialize = true;
-                    while(true){
+                    while(true){ // receding horizon loop
                         synchronized (this) {
                             if (existsNewMission(robotID)) {
                                 Mission mission = getNewMission(robotID);
                                 if (initialize) { // Add first mission
-                                    synchronized (tec) {
-                                        tec.addMissions(mission);
+                                    while(true) { // Finish current mission loop
+                                        synchronized (tec) {
+                                            if(tec.addMissions(mission)){
+                                                break;
+                                            }
+                                        }
+                                        // Sleep for 1s
+                                        try { Thread.sleep(500); }
+                                        catch (InterruptedException e) { e.printStackTrace(); }
                                     }
                                     initialize = false;
                                 } else { // Concat Mission (receding horizon)
-                                    synchronized (tec) {
-                                        tec.addMissions(mission);
-                                    } // replacePath
+                                    while(true) { // Finish current mission loop
+                                        // TODO: to be changed to replacePath
+                                        synchronized (tec) {
+                                            if(tec.addMissions(mission)){
+                                                break;
+                                            }
+                                        }
+                                        // Sleep for 1s
+                                        try { Thread.sleep(500); }
+                                        catch (InterruptedException e) { e.printStackTrace(); }
+                                    }
                                 }
                             }
                         }
@@ -132,7 +150,7 @@ public  abstract class AbstractMultirobotPlanning {
         // Gson to read/parse file
         Gson gson = new Gson();
         // Missions Ids
-        mission_sequence_id = new int[R];
+        int[] mission_sequence_id = new int[R];
         Arrays.fill(mission_sequence_id,0);
         // Finished robots
         ArrayList<Boolean> finished = new ArrayList<>(Arrays.asList(new Boolean[R]));
@@ -163,11 +181,16 @@ public  abstract class AbstractMultirobotPlanning {
                     }
                     paths[r].addFirst(ps);
                     finished.set(r, path.lastPath);
+                } else{
+                    mission_sequence_id[r]--;
                 }
             }
             // Test if all robots finished
-            if (finished.stream().allMatch(elem -> elem)) break;
+            if (finished.stream().allMatch(elem -> elem == true)) break;
 
+            // Sleep for 0.2s
+            try { Thread.sleep(200); }
+            catch (InterruptedException e) { e.printStackTrace(); }
         }
         return true;
     }
@@ -180,7 +203,7 @@ public  abstract class AbstractMultirobotPlanning {
     Mission getNewMission(int robotID){
         PoseSteering[] path = paths[robotID-1].getLast();
         paths[robotID-1].removeLast();
-        return  new Mission(robotID+1, path);
+        return  new Mission(robotID, path);
     }
 
     /**
@@ -213,7 +236,7 @@ public  abstract class AbstractMultirobotPlanning {
 
         //You probably also want to provide a non-trivial forward model
         //(the default assumes that robots can always stop)
-        for(int r = 1; r < R+1; ++r) {
+        for(int r = 1; r <= R; ++r) {
             tec.setForwardModel(r, new ConstantAccelerationForwardModel(max_acc, max_vel, tec.getTemporalResolution(), tec.getControlPeriod(), tec.getRobotTrackingPeriodInMillis(1)));
         }
 

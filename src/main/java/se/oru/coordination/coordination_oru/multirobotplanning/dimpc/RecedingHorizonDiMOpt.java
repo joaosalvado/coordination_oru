@@ -22,13 +22,14 @@ import com.google.gson.Gson;
 
 public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     private ArrayList<Double> L; // Circle Robots Diameter;
-    int N = 10;
+    private int N = 20;
     public RecedingHorizonDiMOpt(int R, double max_vel, double max_acc, String map){
         super(R, max_vel, max_acc, map);
         L = new ArrayList<>(R);
     }
+
     @Override
-    public boolean plan(MultirobotProblem problem) {
+    protected boolean plan(MultirobotProblem problem) {
         for(int r = 0; r < R; ++r){
             tec.placeRobot(r+1,problem.start[r]);
         }
@@ -38,7 +39,6 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
        writeProblemFile(problem);
        // Start dimopt executable that reads .json file and solves the problem
        startDiMOpt();
-        System.out.println("E!");
        return true;
     }
 
@@ -57,7 +57,7 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     }
 
 
-    void writeProblemFile(MultirobotProblem problem){
+    private void writeProblemFile(MultirobotProblem problem){
         // Create DiMopt Mission
         MissionDiMOpt missionDiMOpt = new MissionDiMOpt(R);
         ArrayList<ArrayList<Double>> start_dimopt = new ArrayList<>();
@@ -90,7 +90,7 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
 
     }
 
-    void startDiMOpt(){
+    private void startDiMOpt(){
         ProcessBuilder p = new ProcessBuilder();
 
         String cmd = "mpirun -np " + this.R + " --use-hwthread-cpus --oversubscribe ./RH-DiMOpt/bin/rhdimopt_coordoru";
@@ -123,5 +123,12 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Set the amount of disctretizaiton states.
+     * The higher the longer is the receding horizon at the cost of computational complexity increasing!
+     * @param N_
+     */
+    public void setN(int N_){ this.N = N_;}
 
 }

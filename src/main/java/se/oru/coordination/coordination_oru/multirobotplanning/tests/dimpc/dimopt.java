@@ -22,10 +22,10 @@ public class dimopt {
         int R = 3;
         String file_map = "map-empty.yaml";
         // Robot Footprint Rectangle
-        Coordinate corner1 = new Coordinate(-0.6,0.1);
-        Coordinate corner2 = new Coordinate(0.6,0.1);
-        Coordinate corner3 = new Coordinate(0.6,-0.1);
-        Coordinate corner4 = new Coordinate(-0.6,-0.1);
+        Coordinate corner1 = new Coordinate(-0.2,0.1);
+        Coordinate corner2 = new Coordinate(0.2,0.1);
+        Coordinate corner3 = new Coordinate(0.2,-0.1);
+        Coordinate corner4 = new Coordinate(-0.2,-0.1);
         Coordinate[] footprint = {
                 corner1, corner2, corner3, corner4
         };
@@ -33,74 +33,30 @@ public class dimopt {
         // Start and Goal
         Pose s1 = new Pose( 1.0, 1.0,Math.PI);
         Pose s2 = new Pose(8.0, 1.0,0.5 *Math.PI);
-        Pose s3 = new Pose(6.0, 1.0,-0.5 *Math.PI);
+        Pose s3 = new Pose(4.0, 8.0,-0.5 *Math.PI);
         Pose g1 = new Pose(3.0,7.0,0.0);
         Pose g2 = new Pose( 1.0,8.0,-0.5*Math.PI);
-        Pose g3 = new Pose( 4.0,8.0,0.0);
+        Pose g3 = new Pose( 4.0,1.0,0.0);
 
         Pose [] mrStart = { s1, s2, s3 };
         Pose [] mrGoal = { g1, g2, g3 };
 
-/*        ArrayList<MissionDiMOpt.SE2> start_dimopt = new ArrayList<>();
-        ArrayList<MissionDiMOpt.SE2> goal_dimopt = new ArrayList<>();
-        for(int r = 0; r < R; ++r){
-            start_dimopt.add(
-                    new MissionDiMOpt.SE2(
-                            mrStart[r].getX(),
-                            mrStart[r].getY(),
-                            mrStart[r].getYaw()) );
-            goal_dimopt.add(
-                    new MissionDiMOpt.SE2(
-                            mrGoal[r].getX(),
-                            mrGoal[r].getY(),
-                            0.0) );
-        }
-        MissionDiMOpt m = new MissionDiMOpt(2);
-        m
-                .setMultirobotStart(start_dimopt.toArray(new MissionDiMOpt.SE2[0]))
-                .setMultirobotGoal(goal_dimopt.toArray(new MissionDiMOpt.SE2[0]))
-                .setMap("blabla");
-
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String json = gson.toJson(m);
-        try (PrintWriter out = new PrintWriter("dimopt_mission.txt")) {
-            out.println(json);
-        } catch (Exception e){ }*/
 
 
-        // Multirobot solver
+        // Initialize Multi-robot solver
         RecedingHorizonDiMOpt dimopt = new RecedingHorizonDiMOpt(R, 1.0,1.0, file_map);
-        dimopt.setupTrajectoryEnvelopeCoordinator();
+        dimopt.setN(30); // discretization / horizon
+        // Set robots footprint to be all the same
         dimopt.setFootprintEqual(footprint);
-
-
+        // Set Multi-robot start and goal pose
         dimopt.addMultirobotProblem(mrStart, mrGoal);
+        // Setup trajectory envelope
+        // Note one can use dimopt.getTrajectoryEnvelopeCoordinator() and setup it up
+        dimopt.setupTrajectoryEnvelopeCoordinator();
 
+        // Solves the given problem by dispatching multi-robot mission on
+        // a receding horizon manner to the trajectory envelope coordinator
         dimopt.solve();
-
-
-
-/*
-        MissionDiMOpt mission = new MissionDiMOpt(R);
-        MissionDiMOpt.SE2[] start = {
-                new MissionDiMOpt.SE2(1,0,0),
-                new MissionDiMOpt.SE2(0,3,0)
-        };
-        MissionDiMOpt.SE2[] goal = {
-                new MissionDiMOpt.SE2(0,2,0),
-                new MissionDiMOpt.SE2(0,0,2)
-        };
-*/
-/*        MissionDiMOpt.Polytope.Halfspace[] hps = {
-                new MissionDiMOpt.Polytope.Halfspace(4,0,0),
-                new MissionDiMOpt.Polytope.Halfspace(0,5,0)
-        };*//*
-
-
-        mission.setMultirobotStart(start)
-                .setMultirobotGoal(goal);
-                //.setSamePolytopeFreeSpace(new MissionDiMOpt.Polytope(hps));
-*/
 
     }
 
