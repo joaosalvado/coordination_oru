@@ -129,7 +129,7 @@ public  abstract class AbstractMultirobotPlanning {
                     SimplePath path = gson.fromJson(
                             new FileReader(filename),
                             SimplePath.class);
-                    file.delete(); // delete file
+                    //file.delete(); // delete file
                     // Convert to PoseSteering[]
                     int N = path.x.size();
                     PoseSteering[] ps = new PoseSteering[N];
@@ -182,9 +182,11 @@ public  abstract class AbstractMultirobotPlanning {
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         // Setup
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        tec.setUseInternalCriticalPoints(false);
-        tec.setYieldIfParking(true);
-        tec.setBreakDeadlocks(false, true, true);
+        //tec.setUseInternalCriticalPoints(false);
+        //tec.setYieldIfParking(true);
+        //tec.setBreakDeadlocks(false, true, true);
+
+
         //You probably also want to provide a non-trivial forward model
         //(the default assumes that robots can always stop)
         for(int r = 1; r <= R; ++r) {
@@ -232,6 +234,21 @@ public  abstract class AbstractMultirobotPlanning {
                                     }
                                     initialize = false;
                                 } else { // Concat Mission (receding horizon)
+         /*                           while(true) {
+                                        synchronized (tec) {
+                                            if (tec.addMissions(newMission)) {
+                                                currMission = newMission;
+                                                break;
+                                            }
+                                        }
+
+                                        // Sleep for 0.5s
+                                        try {
+                                            Thread.sleep(500);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }*/
                                     PoseSteering[] currPath = currMission.getPath();
                                     PoseSteering[] newPath = newMission.getPath();
                                     // Concat paths

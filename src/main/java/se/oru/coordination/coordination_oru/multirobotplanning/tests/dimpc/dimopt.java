@@ -38,9 +38,11 @@ public class dimopt {
         Pose g2 = new Pose( 1.0,8.0,-0.5*Math.PI);
         Pose g3 = new Pose( 4.0,1.0,0.0);
 
-        Pose [] mrStart = { s1, s2, s3 };
-        Pose [] mrGoal = { g1, g2, g3 };
+        //Pose [] mrStart = { s1, s2, s3, g1, g2, g3 };
+        //Pose [] mrGoal = { g1, g2, g3, s1, s2, s3 };
 
+        Pose [] mrStart = { s1, s2, s3};
+        Pose [] mrGoal = { g1, g2, g3};
 
 
         // Initialize Multi-robot solver
