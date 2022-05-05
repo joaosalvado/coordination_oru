@@ -43,8 +43,8 @@ public  abstract class AbstractMultirobotPlanning {
         for(int r = 0; r < R; ++r){
             this.paths[r] = new LinkedList<PoseSteering[]>();
         }
-        tec = new TrajectoryEnvelopeCoordinatorSimulation(max_vel, max_acc);
-
+        tec = new TrajectoryEnvelopeCoordinatorSimulation(
+                1000,2000,max_vel, max_acc);
     }
 
     public void addMultirobotProblem(Pose[] start_, Pose[] goal_){
@@ -79,8 +79,15 @@ public  abstract class AbstractMultirobotPlanning {
         });
         multirobotSolver.start();
 
-        // Listener of Trajectories, it fills variable paths
-        Thread listener = new Thread() {
+        synchronized (this) {
+            try {
+                missionListener();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+            // Listener of Trajectories, it fills variable paths
+/*        Thread listener = new Thread() {
             @Override
             public void run() {
                 synchronized (this){
@@ -89,53 +96,7 @@ public  abstract class AbstractMultirobotPlanning {
                 }
             }
         };
-        listener.start();
-
-        for (int i = 1; i <= R; i++) {
-            final int robotID = i;
-            Thread t = new Thread() {
-                @Override
-                public void run() {
-                    boolean initialize = true;
-                    while(true){ // receding horizon loop
-                        synchronized (this) {
-                            if (existsNewMission(robotID)) {
-                                Mission mission = getNewMission(robotID);
-                                if (initialize) { // Add first mission
-                                    while(true) { // Finish current mission loop
-                                        synchronized (tec) {
-                                            if(tec.addMissions(mission)){
-                                                break;
-                                            }
-                                        }
-                                        // Sleep for 1s
-                                        try { Thread.sleep(500); }
-                                        catch (InterruptedException e) { e.printStackTrace(); }
-                                    }
-                                    initialize = false;
-                                } else { // Concat Mission (receding horizon)
-                                    while(true) { // Finish current mission loop
-                                        // TODO: to be changed to replacePath
-                                        synchronized (tec) {
-                                            if(tec.addMissions(mission)){
-                                                break;
-                                            }
-                                        }
-                                        // Sleep for 1s
-                                        try { Thread.sleep(500); }
-                                        catch (InterruptedException e) { e.printStackTrace(); }
-                                    }
-                                }
-                            }
-                        }
-                        // Sleep for 1s
-                        try { Thread.sleep(1000); }
-                        catch (InterruptedException e) { e.printStackTrace(); }
-                    }
-                }
-            };
-            t.start();
-        }
+        listener.start();*/
 
 
         return true;
@@ -214,26 +175,16 @@ public  abstract class AbstractMultirobotPlanning {
         return this.tec;
     }
 
-    public void setupTrajectoryEnvelopeCoordinator(){
+    // Setup the trajectory envelope coordinator tec variable while starts a thread
+    // for each robot that addmissions once they are available
+
+    public void setupTrajectoryEnvelopeCoordinator(Pose[] start){
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         // Setup
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        tec.addComparator(new Comparator<RobotAtCriticalSection>() {
-            @Override
-            public int compare(RobotAtCriticalSection o1, RobotAtCriticalSection o2) {
-                CriticalSection cs = o1.getCriticalSection();
-                RobotReport robotReport1 = o1.getRobotReport();
-                RobotReport robotReport2 = o2.getRobotReport();
-                return ((cs.getTe1Start()-robotReport1.getPathIndex())-(cs.getTe2Start()-robotReport2.getPathIndex()));
-            }
-        });
-        tec.addComparator(new Comparator<RobotAtCriticalSection> () {
-            @Override
-            public int compare(RobotAtCriticalSection o1, RobotAtCriticalSection o2) {
-                return (o2.getRobotReport().getRobotID()-o1.getRobotReport().getRobotID());
-            }
-        });
-
+        tec.setUseInternalCriticalPoints(false);
+        tec.setYieldIfParking(true);
+        tec.setBreakDeadlocks(false, true, true);
         //You probably also want to provide a non-trivial forward model
         //(the default assumes that robots can always stop)
         for(int r = 1; r <= R; ++r) {
@@ -249,6 +200,61 @@ public  abstract class AbstractMultirobotPlanning {
         JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
         if(map_file != null) viz.setMap("maps/" +map_file);
         tec.setVisualization(viz);
+
+        // Place Robots
+        for(int r = 0; r < R; ++r){
+            tec.placeRobot(r+1, start[r]);
+        }
+
+        // Start robot threads
+        for (int i = 1; i <= R; i++) {
+            final int robotID = i;
+            Thread t = new Thread() {
+                @Override
+                public void run() {
+                    boolean initialize = true;
+                    Mission currMission = null;
+                    while(true){ // receding horizon loop
+                        synchronized (this) {
+                            if (existsNewMission(robotID)) {
+                                Mission newMission = getNewMission(robotID);
+                                if (initialize) { // Add first mission
+                                    while(true) { // Finish current mission loop
+                                        synchronized (tec) {
+                                            if(tec.addMissions(newMission)){
+                                                currMission = newMission;
+                                                break;
+                                            }
+                                        }
+                                        // Sleep for 0.5s
+                                        try { Thread.sleep(500); }
+                                        catch (InterruptedException e) { e.printStackTrace(); }
+                                    }
+                                    initialize = false;
+                                } else { // Concat Mission (receding horizon)
+                                    PoseSteering[] currPath = currMission.getPath();
+                                    PoseSteering[] newPath = newMission.getPath();
+                                    // Concat paths
+                                    PoseSteering[] concatPath
+                                            = new PoseSteering[currPath.length + newPath.length-1];
+                                    for(int k = 0; k < currPath.length; ++k) concatPath[k] = currPath[k];
+                                    for(int k = 1; k < newPath.length ; ++k) concatPath[currPath.length-1+k] = newPath[k];
+                                    Mission concatMission = new Mission(robotID, concatPath);
+                                    //HashSet<Integer> otherRobots = new HashSet<>(Arrays.asList(1,2,3));
+                                    //otherRobots.remove(robotID);
+                                    tec.replacePath(robotID,concatPath,currPath.length-1,false, new HashSet<>() );
+                                    currMission = concatMission;
+                                }
+                            }
+                        }
+                        // Sleep for 1s
+                        try { Thread.sleep(5000); }
+                        catch (InterruptedException e) { e.printStackTrace(); }
+                    }
+                }
+            };
+            t.start();
+        }
 
     }
 }

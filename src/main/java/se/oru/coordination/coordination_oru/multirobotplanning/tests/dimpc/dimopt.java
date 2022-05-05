@@ -48,15 +48,20 @@ public class dimopt {
         dimopt.setN(30); // discretization / horizon
         // Set robots footprint to be all the same
         dimopt.setFootprintEqual(footprint);
-        // Set Multi-robot start and goal pose
-        dimopt.addMultirobotProblem(mrStart, mrGoal);
         // Setup trajectory envelope
         // Note one can use dimopt.getTrajectoryEnvelopeCoordinator() and setup it up
-        dimopt.setupTrajectoryEnvelopeCoordinator();
+        dimopt.setupTrajectoryEnvelopeCoordinator(mrStart);
 
+        // Set Multi-robot start and goal pose
+        dimopt.addMultirobotProblem(mrStart, mrGoal);
         // Solves the given problem by dispatching multi-robot mission on
         // a receding horizon manner to the trajectory envelope coordinator
         dimopt.solve();
+
+
+        // Backwards
+        // dimopt.addMultirobotProblem(mrGoal, mrStart);
+        // dimopt.solve();
 
     }
 

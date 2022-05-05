@@ -30,9 +30,6 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
 
     @Override
     protected boolean plan(MultirobotProblem problem) {
-        for(int r = 0; r < R; ++r){
-            tec.placeRobot(r+1,problem.start[r]);
-        }
        // Populates L
        computeRobotRadius();
        // Writes a .json file with problem

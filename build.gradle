@@ -30,6 +30,8 @@ apply plugin: 'maven'
 apply plugin: 'application'
 // The main class that will be executed when you do 'gradle run'
 mainClassName = 'se.oru.coordination.coordination_oru.multirobotplanning.tests.dimpc.dimopt' //demo.DemoLauncher'
+
+//mainClassName = 'se.oru.coordination.coordination_oru.tests.clean.ReplacePathExample'
 //mainClassName = 'se.oru.coordination.coordination_oru.tests.TestTrajectoryEnvelopeCoordinatorWithMotionPlannerReplan'
 repositories {
   mavenLocal()
