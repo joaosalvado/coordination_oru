@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class dimopt {
 
     public static void main(String[] args) {
-        int R = 3;
+        int R = 2;
         String file_map = "map-empty.yaml";
         // Robot Footprint Rectangle
         Coordinate corner1 = new Coordinate(-0.2,0.1);
@@ -34,20 +34,22 @@ public class dimopt {
         Pose s1 = new Pose( 1.0, 1.0,Math.PI);
         Pose s2 = new Pose(8.0, 1.0,0.5 *Math.PI);
         Pose s3 = new Pose(4.0, 8.0,-0.5 *Math.PI);
+        Pose s4 = new Pose(1.0, 4.0, 0*Math.PI);
         Pose g1 = new Pose(3.0,7.0,0.0);
         Pose g2 = new Pose( 1.0,8.0,-0.5*Math.PI);
         Pose g3 = new Pose( 4.0,1.0,0.0);
+        Pose g4 = new Pose(8.0, 4.0, 0*Math.PI);
 
-        //Pose [] mrStart = { s1, s2, s3, g1, g2, g3 };
-        //Pose [] mrGoal = { g1, g2, g3, s1, s2, s3 };
+        //Pose [] mrStart = { s1, s2, s3, s4, g1, g2, g3, g4 };
+        //Pose [] mrGoal = { g1, g2, g3, g4, s1, s2, s3, s4 };
 
-        Pose [] mrStart = { s1, s2, s3};
-        Pose [] mrGoal = { g1, g2, g3};
+         Pose [] mrStart = { g1, g2};
+         Pose [] mrGoal = { s1, s2};
 
 
         // Initialize Multi-robot solver
         RecedingHorizonDiMOpt dimopt = new RecedingHorizonDiMOpt(R, 1.0,1.0, file_map);
-        dimopt.setN(30); // discretization / horizon
+        dimopt.setN(20); // discretization / horizon
         // Set robots footprint to be all the same
         dimopt.setFootprintEqual(footprint);
         // Setup trajectory envelope
@@ -60,11 +62,9 @@ public class dimopt {
         // a receding horizon manner to the trajectory envelope coordinator
         dimopt.solve();
 
-
-        // Backwards
-        // dimopt.addMultirobotProblem(mrGoal, mrStart);
+        // New multi-robot problem, sending robots to start pose
+        // dimopt.addMultirobotProblem(mrStart);
         // dimopt.solve();
-
     }
 
 }

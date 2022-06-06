@@ -10,6 +10,7 @@ import org.metacsp.multi.spatioTemporal.paths.PoseSteering;
 import org.metacsp.utility.logging.MetaCSPLogging;
 import se.oru.coordination.coordination_oru.*;
 import se.oru.coordination.coordination_oru.simulation2D.TrajectoryEnvelopeCoordinatorSimulation;
+import se.oru.coordination.coordination_oru.util.BrowserVisualization;
 import se.oru.coordination.coordination_oru.util.JTSDrawingPanelVisualization;
 import se.oru.coordination.coordination_oru.util.Missions;
 
@@ -50,6 +51,21 @@ public  abstract class AbstractMultirobotPlanning {
     public void addMultirobotProblem(Pose[] start_, Pose[] goal_){
         if(goal_.length != R || start_.length != R){
             metaCSPLogger.warning("The amount of poses should be: " + R);
+        }
+        this.problem = new MultirobotProblem(start_, goal_);
+    }
+
+    /**
+     * Robots have been already placed or executed a mission previously
+     * @param goal_
+     */
+    public void addMultirobotProblem(Pose[] goal_){
+        if( goal_.length != R ){
+            metaCSPLogger.warning("The amount of poses should be: " + R);
+        }
+        Pose[] start_ = new Pose[R];
+        for(int r = 0; r < R; ++r){
+            start_[r] = tec.getRobotReport(r).getPose();
         }
         this.problem = new MultirobotProblem(start_, goal_);
     }
@@ -142,6 +158,9 @@ public  abstract class AbstractMultirobotPlanning {
                     }
                     paths[r].addFirst(ps);
                     finished.set(r, path.lastPath);
+
+                    // handle file
+                    file.delete();
                 } else{
                     mission_sequence_id[r]--;
                 }
@@ -150,7 +169,7 @@ public  abstract class AbstractMultirobotPlanning {
             if (finished.stream().allMatch(elem -> elem == true)) break;
 
             // Sleep for 0.2s
-            try { Thread.sleep(200); }
+            try { Thread.sleep(100); }
             catch (InterruptedException e) { e.printStackTrace(); }
         }
         return true;
@@ -199,9 +218,14 @@ public  abstract class AbstractMultirobotPlanning {
         tec.startInference();
 
         //Setup a simple GUI (null means empty map, otherwise provide yaml file)
-        JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
+        //JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
+        BrowserVisualization viz = new BrowserVisualization();
+        viz.setInitialTransform(40.0, 1.5, 15.0);
         if(map_file != null) viz.setMap("maps/" +map_file);
         tec.setVisualization(viz);
+
+
+
 
         // Place Robots
         for(int r = 0; r < R; ++r){
