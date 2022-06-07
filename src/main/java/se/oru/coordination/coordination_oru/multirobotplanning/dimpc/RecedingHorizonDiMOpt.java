@@ -90,9 +90,11 @@ public class RecedingHorizonDiMOpt extends AbstractMultirobotPlanning {
     private void startDiMOpt(){
         ProcessBuilder p = new ProcessBuilder();
 
-        String cmd = "mpirun -np " + this.R + " --use-hwthread-cpus --oversubscribe ./RH-DiMOpt/bin/rhdimopt_coordoru";
-        runCommand("/bin/bash", "-l", "-c", cmd);
+        String rm_path =  "rm ./RH-DiMOpt/bin/t_path_*";
+        String run_mpi = "mpirun -np " + this.R + " --use-hwthread-cpus --oversubscribe ./RH-DiMOpt/bin/rhdimopt_coordoru";
 
+        runCommand("/bin/bash", "-l", "-c", rm_path);
+        runCommand("/bin/bash", "-l", "-c", run_mpi);
     }
 
     private void runCommand(String... cmd) {

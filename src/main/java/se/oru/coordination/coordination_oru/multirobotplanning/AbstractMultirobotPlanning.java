@@ -102,18 +102,6 @@ public  abstract class AbstractMultirobotPlanning {
                 e.printStackTrace();
             }
         }
-            // Listener of Trajectories, it fills variable paths
-/*        Thread listener = new Thread() {
-            @Override
-            public void run() {
-                synchronized (this){
-                    try{ missionListener(); }
-                    catch(Exception e){ e.printStackTrace();}
-                }
-            }
-        };
-        listener.start();*/
-
 
         return true;
     }

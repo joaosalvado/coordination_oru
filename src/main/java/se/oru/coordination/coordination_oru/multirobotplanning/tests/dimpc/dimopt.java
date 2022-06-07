@@ -43,7 +43,7 @@ public class dimopt {
         //Pose [] mrStart = { s1, s2, s3, s4, g1, g2, g3, g4 };
         //Pose [] mrGoal = { g1, g2, g3, g4, s1, s2, s3, s4 };
 
-         Pose [] mrStart = { g1, g2};
+         Pose [] mrStart = {  g1, g2};
          Pose [] mrGoal = { s1, s2};
 
 
