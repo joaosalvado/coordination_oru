@@ -208,7 +208,7 @@ public  abstract class AbstractMultirobotPlanning {
         //Setup a simple GUI (null means empty map, otherwise provide yaml file)
         //JTSDrawingPanelVisualization viz = new JTSDrawingPanelVisualization();
         BrowserVisualization viz = new BrowserVisualization();
-        viz.setInitialTransform(40.0, 1.5, 15.0);
+        viz.setInitialTransform(120.0, 5, 3.0);
         if(map_file != null) viz.setMap("maps/" +map_file);
         tec.setVisualization(viz);
 

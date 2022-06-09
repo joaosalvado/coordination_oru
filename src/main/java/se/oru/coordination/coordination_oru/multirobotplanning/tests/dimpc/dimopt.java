@@ -20,12 +20,13 @@ public class dimopt {
 
     public static void main(String[] args) {
         int R = 2;
-        String file_map = "map-empty.yaml";
+        String file_map = "map-partial-3.yaml";
         // Robot Footprint Rectangle
-        Coordinate corner1 = new Coordinate(-0.2,0.1);
-        Coordinate corner2 = new Coordinate(0.2,0.1);
-        Coordinate corner3 = new Coordinate(0.2,-0.1);
-        Coordinate corner4 = new Coordinate(-0.2,-0.1);
+        double dx = 0.1, dy = 0.05;
+        Coordinate corner1 = new Coordinate(-dx,dy);
+        Coordinate corner2 = new Coordinate(dx,dy);
+        Coordinate corner3 = new Coordinate(dx,-dy);
+        Coordinate corner4 = new Coordinate(-dx,-dy);
         Coordinate[] footprint = {
                 corner1, corner2, corner3, corner4
         };
@@ -42,9 +43,13 @@ public class dimopt {
 
         //Pose [] mrStart = { s1, s2, s3, s4, g1, g2, g3, g4 };
         //Pose [] mrGoal = { g1, g2, g3, g4, s1, s2, s3, s4 };
+        Pose start1 = new Pose(1.5,0.4,0.0);
+        Pose start2 = new Pose( 1.0,1.5,0.0*Math.PI);
+        Pose goal1 = new Pose( 10.0,0.45,0.0);
+        Pose goal2 = new Pose(10.0, 1.5, 0*Math.PI);
 
-         Pose [] mrStart = {  g1, g2};
-         Pose [] mrGoal = { s1, s2};
+         Pose [] mrStart = {  start1, start2};
+         Pose [] mrGoal = { goal2, goal1};
 
 
         // Initialize Multi-robot solver
